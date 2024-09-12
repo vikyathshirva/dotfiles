@@ -15,7 +15,7 @@ You can set up your development environment by running a simple command. This wi
 ### Step 1: Clone and Run the Installation Script
 
 ```bash
-curl -o- https://raw.githubusercontent.com/yourusername/dotfiles/master/install.sh | bash
+curl -o- https://raw.githubusercontent.com/vikyathshirva/dotfiles/main/install.sh | bash
 ```
 
 ### Step 2: Tmux Plugin Manager
