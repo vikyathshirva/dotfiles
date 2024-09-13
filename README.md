@@ -37,7 +37,7 @@ If you prefer to manually set up the environment, follow these steps:
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
+   git clone https://github.com/vikyathshirva/dotfiles.git ~/.dotfiles
    ```
 
 2. Symlink the configuration files:
