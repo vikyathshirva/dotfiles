@@ -31,8 +31,9 @@ require("lazy").setup({
   "williamboman/mason.nvim",
   "williamboman/mason-lspconfig.nvim",
   "neovim/nvim-lspconfig",
-  "neovim/nvim-lspconfig",
   "mfussenegger/nvim-dap",
+  "hrsh7th/cmp-buffer",
+  "hrsh7th/nvim-cmp",
   {
     "mrcjkb/rustaceanvim",
     version = '^5', -- Recommended
