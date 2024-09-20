@@ -31,7 +31,7 @@ fi
 
 # Clone dotfiles repository
 echo "Cloning dotfiles..."
-git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
+git clone https://github.com/vikyathshirva/dotfiles.git ~/.dotfiles
 
 # Symlink configuration files
 echo "Setting up symlinks..."
