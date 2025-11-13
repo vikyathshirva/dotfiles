@@ -24,6 +24,7 @@ vim.keymap.set('n', 'gl', '<Cmd>lua vim.diagnostic.open_float()<CR>', opts)
 vim.keymap.set('n', 'K', '<Cmd>Lspsaga hover_doc<CR>', opts)
 vim.keymap.set('n', 'gd', '<Cmd>Lspsaga finder<CR>', opts)
 vim.keymap.set('n', 'gt', '<Cmd>Lspsaga goto_type_definition<CR>', opts)
+vim.keymap.set('n', 'gR', '<Cmd>Telescope lsp_references<CR>', opts)
 -- vim.keymap.set('i', '<C-k>', '<Cmd>Lspsaga signature_help<CR>', opts)
 vim.keymap.set('i', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
 vim.keymap.set('n', 'gp', '<Cmd>Lspsaga peek_definition<CR>', opts)
@@ -32,4 +33,3 @@ vim.keymap.set('n', 'gr', '<Cmd>Lspsaga rename<CR>', opts)
 
 -- code action
 vim.keymap.set({ "n", "v" }, "<leader>ca", "<cmd>Lspsaga code_action<CR>")
-

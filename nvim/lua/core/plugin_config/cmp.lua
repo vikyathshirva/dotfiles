@@ -1,6 +1,30 @@
 local status, cmp = pcall(require, "cmp")
 if (not status) then return end
 local lspkind = require 'lspkind'
+-- Direct monkey patch for the LSP client's _resolve_bufnr function
+-- This is what's causing your error
+local function apply_bufnr_patch()
+  -- Path to the file with the issue
+  local file_path = vim.api.nvim_get_runtime_file("lua/vim/lsp/client.lua", false)[1]
+  if file_path then
+    -- Load the module
+    local client = require('vim.lsp.client')
+    -- Store the original function
+    local original_resolve_bufnr = client._resolve_bufnr
+    -- Replace with our fixed version
+    client._resolve_bufnr = function(bufnr, method)
+      if type(bufnr) == 'function' then
+        -- If bufnr is a function, use current buffer instead
+        return vim.api.nvim_get_current_buf(), method
+      end
+      -- Otherwise use the original function
+      return original_resolve_bufnr(bufnr, method)
+    end
+  end
+end
+
+-- Apply the patch immediately
+apply_bufnr_patch()
 
 local function formatForTailwindCSS(entry, vim_item)
   if vim_item.kind == 'Color' and entry.completion_item.documentation then

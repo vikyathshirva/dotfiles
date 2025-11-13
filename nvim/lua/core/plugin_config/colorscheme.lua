@@ -1,4 +1,5 @@
 require("catppuccin").setup({
+  
   flavour = "mocha",
   transparent_background = false,
   styles = {                 -- Handles the styles of general hi groups (see `:h highlight-args`):

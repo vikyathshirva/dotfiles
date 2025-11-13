@@ -9,12 +9,20 @@ end
 
 local fb_actions = require "telescope".extensions.file_browser.actions
 
+
 telescope.setup {
   defaults = {
     mappings = {
       n = {
         ["q"] = actions.close
       },
+    },
+  },
+  pickers = {
+    buffers = {
+      ignore_current_buffer = true,
+      sort_mru = true,
+      sort_lastused = true,
     },
   },
   extensions = {
@@ -48,20 +56,56 @@ telescope.setup {
   },
 }
 
+
 telescope.load_extension("file_browser")
 
 vim.keymap.set('n', ';f',
   function()
     builtin.find_files({
       no_ignore = false,
-      hidden = true
+      hidden = true,
+      prompt_prefix = " ",
+      selection_caret = " ",
+      path_display = { "smart" },
+      dynamic_preview_title = true,
+      winblend = 10,
+      sorting_strategy = "ascending",
+      layout_strategy = "vertical",
+      layout_config = {
+        prompt_position = "bottom",
+        height = 0.95,
+      },
     })
   end)
 vim.keymap.set('n', ';r', function()
-  builtin.live_grep()
+  builtin.live_grep({
+    prompt_prefix = " ",
+    selection_caret = " ",
+    path_display = { "smart" },
+    dynamic_preview_title = true,
+    winblend = 10,
+    sorting_strategy = "ascending",
+    layout_strategy = "vertical",
+    layout_config = {
+      prompt_position = "bottom",
+      height = 0.95,
+    },
+  })
 end)
 vim.keymap.set('n', '\\\\', function()
-  builtin.buffers()
+  builtin.buffers({
+    prompt_prefix = " ",
+    selection_caret = " ",
+    path_display = { "smart" },
+    dynamic_preview_title = true,
+    winblend = 10,
+    sorting_strategy = "ascending",
+    layout_strategy = "vertical",
+    layout_config = {
+      prompt_position = "bottom",
+      height = 0.95,
+    },
+  })
 end)
 vim.keymap.set('n', ';t', function()
   builtin.help_tags()
