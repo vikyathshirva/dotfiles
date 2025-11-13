@@ -5,6 +5,7 @@ require("lazy").setup({
   "nvim-tree/nvim-tree.lua",
   "nvim-tree/nvim-web-devicons",
   "ellisonleao/gruvbox.nvim",
+  "dracula/vim",
   {
     {
       "nvimtools/none-ls.nvim",
@@ -13,17 +14,18 @@ require("lazy").setup({
         local fmt = nls.builtins.formatting
         local dgn = nls.builtins.diagnostics
         local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
+
         nls.setup({
           sources = {
             -- # FORMATTING #
+            -- Example: enable Java formatting (Google Java Format)
             -- fmt.google_java_format.with({ extra_args = { "--aosp" } }),
+
             -- # DIAGNOSTICS #
-            dgn.checkstyle.with({
-              extra_args = {
-                "-c",
-                vim.fn.expand("~/.config/checkstyle/twilio_checkstyle.xml"),
-              },
-            }),
+            -- Placeholder: if you have a Checkstyle XML, update the path below
+            -- dgn.checkstyle.with({
+            --   extra_args = { "-c", vim.fn.expand("~/.config/checkstyle/my_checkstyle.xml") },
+            -- }),
           },
           on_attach = function(client, bufnr)
             if client.supports_method("textDocument/formatting") then
@@ -47,14 +49,13 @@ require("lazy").setup({
         "williamboman/mason.nvim",
         "nvimtools/none-ls.nvim",
       },
-      opt = {
+      opts = {
         ensure_installed = {
-          "checkstyle"
+          "checkstyle", -- optional, keep if you plan to use Checkstyle
         },
       },
     },
   },
-  "dracula/vim",
   {
     "goolord/alpha-nvim",
     dependencies = { "nvim-tree/nvim-web-devicons", }
@@ -90,7 +91,7 @@ require("lazy").setup({
     opts = {
       automatic_enable = {
         exclude = {
-          'jdlts'
+          'jdtls'
         }
       }
     }
@@ -121,203 +122,173 @@ require("lazy").setup({
     dependencies = { "nvim-lua/plenary.nvim" }
   },
   "nvim-telescope/telescope-file-browser.nvim",
-  {
-    "mfussenegger/nvim-jdtls",
-    dependencies = { "folke/which-key.nvim" },
-    ft = { "java" },
-    config = function()
-      local wk = require("which-key")
-      local home = os.getenv("HOME")
+  { "folke/which-key.nvim" },
+{
+  "mfussenegger/nvim-jdtls",
+  dependencies = { "folke/which-key.nvim" },
+  ft = { "java" },
+  config = function()
+    local wk = require("which-key")
+    local home = os.getenv("HOME")
 
-      local function on_jdtls_attach(client, bufnr)
-        wk.register({
-          ["<leader>cx"] = { name = "+extract" },
-          ["<leader>cxv"] = { function() require("jdtls").extract_variable() end, "Extract Variable" },
-          -- more mappings...
-        }, { buffer = bufnr })
-      end
+    local function on_jdtls_attach(client, bufnr)
+      wk.register({
+        ["<leader>cx"] = { name = "+extract" },
+        ["<leader>cxv"] = { function() require("jdtls").extract_variable() end, "Extract Variable" },
+      }, { buffer = bufnr })
+    end
 
-      local function clear_jdtls_workspace(project_name)
-        local ws = home .. "/.cache/jdtls/" .. (project_name or "")
-        if ws ~= "" and vim.fn.isdirectory(ws) == 1 then
-          local choice = vim.fn.confirm("Clean jdtls workspace for " .. (project_name or "<unknown>") .. "?", "&Yes\n&No",
-            1)
-          if choice == 1 then
-            vim.notify("Cleaning JDTLS workspace: " .. ws, vim.log.levels.INFO)
-            os.execute("rm -rf " .. ws)
-            os.execute("mkdir -p " .. ws)
-          end
+    local function clear_jdtls_workspace(project_name)
+      local ws = home .. "/.cache/jdtls/" .. (project_name or "")
+      if ws ~= "" and vim.fn.isdirectory(ws) == 1 then
+        local choice = vim.fn.confirm(
+          "Clean jdtls workspace for " .. (project_name or "<unknown>") .. "?",
+          "&Yes\n&No",
+          1
+        )
+        if choice == 1 then
+          vim.notify("Cleaning JDTLS workspace: " .. ws, vim.log.levels.INFO)
+          os.execute("rm -rf " .. ws)
+          os.execute("mkdir -p " .. ws)
         end
       end
+    end
 
-      local function get_classpath_sources(module_path)
-        local cpfile = module_path .. "/.classpath"
-        local sources = {}
-        if vim.fn.filereadable(cpfile) == 1 then
-          local lines = vim.fn.readfile(cpfile)
-          local content = table.concat(lines, "\n")
-          for path in string.gmatch(content, 'kind="src" path="([^"]+)"') do
-            if path:sub(1, 1) == "/" then path = path:sub(2) end
-            local abs = module_path .. "/" .. path
-            if vim.fn.isdirectory(abs) == 1 then
-              table.insert(sources, abs)
-            end
-          end
-        end
-        -- Extra generated sources if exist
-        local extras = {
-          "target/generated-sources/annotations",
-          "target/generated-sources/guardrail-twilio-sources",
-          "build/generated/sources/annotationProcessor/java/main",
-        }
-        for _, rel in ipairs(extras) do
-          local abs = module_path .. "/" .. rel
+    local function get_classpath_sources(module_path)
+      local cpfile = module_path .. "/.classpath"
+      local sources = {}
+      if vim.fn.filereadable(cpfile) == 1 then
+        local lines = vim.fn.readfile(cpfile)
+        local content = table.concat(lines, "\n")
+        for path in string.gmatch(content, 'kind="src" path="([^"]+)"') do
+          if path:sub(1, 1) == "/" then path = path:sub(2) end
+          local abs = module_path .. "/" .. path
           if vim.fn.isdirectory(abs) == 1 then
             table.insert(sources, abs)
           end
         end
-        return sources
+      end
+      local extras = {
+        "target/generated-sources/annotations",
+        "build/generated/sources/annotationProcessor/java/main",
+      }
+      for _, rel in ipairs(extras) do
+        local abs = module_path .. "/" .. rel
+        if vim.fn.isdirectory(abs) == 1 then
+          table.insert(sources, abs)
+        end
+      end
+      return sources
+    end
+
+    local function setup_jdtls()
+      -- Use the *actual* current directory for module detection
+      local current_file = vim.fn.expand("%:p")
+      local cwd = vim.fn.fnamemodify(current_file, ":h")
+
+      -- Walk upward to find a root marker, if any (pom.xml, etc.)
+      -- local root_markers = { "pom.xml", "build.gradle", "build.gradle.kts", ".git", ".classpath" }
+      -- local rootp = vim.fs.find(root_markers, { upward = true, path = cwd })[1]
+      -- local root_dir = rootp and vim.fs.dirname(rootp) or cwd
+
+      local build_markers = { "pom.xml", "build.gradle", "build.gradle.kts", ".classpath" }
+      local build_root = vim.fs.find(build_markers, { upward = true, path = cwd })[1]
+      -- If no build file is found, keep the current folder as the root (avoid using only .git)
+      local root_dir = build_root and vim.fs.dirname(build_root) or cwd
+      -- Module path = current folder if not a build root
+      local module_path = cwd
+
+      -- Project name = last folder name (so /Java/2025/dsa/basics → basics)
+      local project_name = vim.fn.fnamemodify(cwd, ":t")
+
+      -- Unique workspace/config per folder
+      local workspace_dir = home .. "/.cache/jdtls/" .. project_name .. "/workspace"
+      local config_dir = home .. "/.cache/jdtls/" .. project_name .. "/config"
+      os.execute("mkdir -p " .. workspace_dir)
+      os.execute("mkdir -p " .. config_dir)
+
+      -- Lombok support
+      local lombok_version = "1.18.36"
+      local lombok_jar = home .. "/.local/share/java/lombok-" .. lombok_version .. ".jar"
+      if vim.fn.filereadable(lombok_jar) == 0 then
+        vim.notify("Downloading Lombok " .. lombok_version .. "...", vim.log.levels.INFO)
+        os.execute("mkdir -p " .. vim.fn.fnamemodify(lombok_jar, ":h"))
+        os.execute("curl -L https://projectlombok.org/downloads/lombok-" .. lombok_version .. ".jar -o " .. lombok_jar)
       end
 
-      local function setup_jdtls()
-        local root_markers = { "pom.xml", "build.gradle", "build.gradle.kts", ".git", ".classpath" }
-        local rootp = vim.fs.find(root_markers, { upward = true })[1]
-        local root_dir = rootp and vim.fs.dirname(rootp) or vim.fn.getcwd()
-        local current = vim.fn.expand("%:p")
-        local module_path = (function()
-          local dir = vim.fn.fnamemodify(current, ":h")
-          local root_abs = vim.fn.fnamemodify(root_dir, ":p:h")
-          while dir and dir:find(root_abs, 1, true) == 1 do
-            if vim.fn.filereadable(dir .. "/.classpath") == 1 or
-                vim.fn.filereadable(dir .. "/pom.xml") == 1 or
-                vim.fn.filereadable(dir .. "/build.gradle") == 1 or
-                vim.fn.filereadable(dir .. "/build.gradle.kts") == 1 then
-              return dir
-            end
-            dir = vim.fn.fnamemodify(dir, ":h")
-          end
-          return root_dir
-        end)()
+      local is_maven = vim.fn.filereadable(module_path .. "/pom.xml") == 1
+      local is_gradle = vim.fn.filereadable(module_path .. "/build.gradle") == 1
+          or vim.fn.filereadable(module_path .. "/build.gradle.kts") == 1
 
-        local project_name = vim.fn.fnamemodify(root_dir, ":t")
-        local workspace_dir = home .. "/.cache/jdtls/" .. project_name .. "/workspace"
-        local config_dir = home .. "/.cache/jdtls/" .. project_name .. "/config"
-        os.execute("mkdir -p " .. workspace_dir)
-        os.execute("mkdir -p " .. config_dir)
-
-        -- Path to lombok jar
-        local lombok_version = "1.18.36"
-        local lombok_jar = home .. "/.local/share/java/lombok-" .. lombok_version .. ".jar"
-        -- Update if path differs, or fetch if missing
-        if vim.fn.filereadable(lombok_jar) == 0 then
-          vim.notify("Downloading Lombok " .. lombok_version .. "...", vim.log.levels.INFO)
-          os.execute("mkdir -p " .. vim.fn.fnamemodify(lombok_jar, ":h"))
-          os.execute("curl -L https://projectlombok.org/downloads/lombok-" .. lombok_version .. ".jar -o " .. lombok_jar)
-        end
-
-        -- Clear workspace for this project if needed
+      if is_maven or is_gradle or vim.fn.filereadable(module_path .. "/.classpath") == 1 then
         clear_jdtls_workspace(project_name)
+      else
+        vim.notify("Skipping JDTLS workspace cleaning for standalone file", vim.log.levels.WARN)
+      end
 
-        local classpath_sources = get_classpath_sources(module_path)
+      local classpath_sources = get_classpath_sources(module_path)
+      local source_paths = #classpath_sources > 0 and classpath_sources or {
+        "src/main/java",
+        "src/test/java",
+        "target/generated-sources/annotations",
+      }
 
-        local is_maven = vim.fn.filereadable(module_path .. "/pom.xml") == 1
-        local is_gradle = vim.fn.filereadable(module_path .. "/build.gradle") == 1 or
-            vim.fn.filereadable(module_path .. "/build.gradle.kts") == 1
+      local cmd = {
+        "jdtls",
+        "--jvm-arg=-javaagent:" .. lombok_jar,
+        "--jvm-arg=-Xmx4G",
+        "--jvm-arg=-XX:+UseG1GC",
+        "--jvm-arg=-XX:+UseStringDeduplication",
+        "--jvm-arg=-Djdt.ls.useClasspathFile=" .. tostring(vim.fn.filereadable(module_path .. "/.classpath") == 1),
+        "--jvm-arg=-Djdt.ls.detectGeneratedClassesWithoutSpecificSourcePath=true",
+        "--jvm-arg=-Djdt.annotationProcessing.enabled=true",
+        "--jvm-arg=-Declipse.jdt.ls.lombokSupport=true",
+        "-configuration", config_dir,
+        "-data", workspace_dir,
+      }
 
-        local cmd = {
-          "jdtls",
-          -- Lombok agent must be before the launcher jar
-          "--jvm-arg=-javaagent:" .. lombok_jar,
-          "--jvm-arg=-Xmx4G",
-          "--jvm-arg=-XX:+UseG1GC",
-          "--jvm-arg=-XX:+UseStringDeduplication",
-          "--jvm-arg=-Djdt.ls.useClasspathFile=" .. tostring(vim.fn.filereadable(module_path .. "/.classpath") == 1),
-          "--jvm-arg=-Djdt.ls.detectGeneratedClassesWithoutSpecificSourcePath=true",
-          "--jvm-arg=-Djdt.annotationProcessing.enabled=true",
-          -- you can also add -Declipse.jdt.ls.lombokSupport=true if needed
-          "--jvm-arg=-Declipse.jdt.ls.lombokSupport=true",
-          "-configuration", config_dir,
-          "-data", workspace_dir,
-        }
-
-        local source_paths = {}
-        if #classpath_sources > 0 then
-          source_paths = classpath_sources
-        else
-          source_paths = {
-            "src/main/java",
-            "src/test/java",
-            "target/generated-sources/annotations",
-            "target/generated-sources/guardrail-twilio-sources",
-          }
-        end
-
-        local config = {
-          cmd = cmd,
-          root_dir = root_dir,
-          on_attach = on_jdtls_attach,
-          capabilities = require("cmp_nvim_lsp").default_capabilities(),
-          settings = {
-            java = {
-              jdt = {
-                ls = {
-                  lombokSupport = { enabled = true },
-                }
-              },
-              configuration = {
-                updateBuildConfiguration = "automatic",
-                sourcePaths = source_paths,
-                projectPaths = is_maven and { "pom.xml" } or (is_gradle and { "build.gradle", "build.gradle.kts" } or {}),
-              },
-              compiler = {
-                processAnnotations = true,
-                annotationProcessingEnabled = true,
-              },
-              import = {
-                maven = { enabled = is_maven },
-                gradle = { enabled = is_gradle, wrapper = { enabled = is_gradle } },
-              },
-              project = {
-                encoding = "UTF-8",
-                referencedLibraries = {},
-                sourceAttachment = { download = true, onDemand = true },
-              },
-              completion = {
-                enabled = true,
-                guessMethodArguments = true,
-                favoriteStaticMembers = { "org.slf4j.LoggerFactory.getLogger" },
-              },
-              implementationsCodeLens = { enabled = true },
-              referencesCodeLens = { enabled = true },
-              references = { includeDecompiledSources = true },
+      local config = {
+        cmd = cmd,
+        root_dir = root_dir,
+        on_attach = on_jdtls_attach,
+        capabilities = require("cmp_nvim_lsp").default_capabilities(),
+        settings = {
+          java = {
+            configuration = {
+              updateBuildConfiguration = "automatic",
+              sourcePaths = source_paths,
+              projectPaths = is_maven and { "pom.xml" }
+                  or (is_gradle and { "build.gradle", "build.gradle.kts" } or {}),
             },
+            compiler = { processAnnotations = true },
+            import = {
+              maven = { enabled = is_maven },
+              gradle = { enabled = is_gradle, wrapper = { enabled = is_gradle } },
+            },
+            project = { encoding = "UTF-8" },
+            completion = { enabled = true },
+            implementationsCodeLens = { enabled = true },
+            referencesCodeLens = { enabled = true },
           },
-          flags = { allow_incremental_sync = true, server_side_fuzzy_completion = true },
-        }
+        },
+      }
 
-        vim.notify("Starting JDTLS (with Lombok) for module: " .. module_path, vim.log.levels.INFO)
-        require("jdtls").start_or_attach(config)
-      end
+      vim.notify("Starting JDTLS for folder: " .. cwd, vim.log.levels.INFO)
+      require("jdtls").start_or_attach(config)
+    end
 
-      -- Autocommand
-      local setup_on_first_java = false
-
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = "java",
-        callback = function()
-          if not setup_on_first_java then
-            setup_jdtls()
-            setup_on_first_java = true -- Ensure it runs only once
-          end
-        end,
-      })
-
-      if vim.bo.filetype == "java" then
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "java",
+      callback = function()
         setup_jdtls()
-      end
-    end,
-  },
-  { "folke/which-key.nvim" },
+      end,
+    })
+
+    if vim.bo.filetype == "java" then
+      setup_jdtls()
+    end
+  end,
+},
   {
     "iamcco/markdown-preview.nvim",
     cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
