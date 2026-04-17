@@ -1,9 +1,11 @@
 # Ignore everything
 *
 
-# Except these directories
+# Except these directories and their contents
 !nvim/
+!nvim/**
 !tmux/
+!tmux/**
 
 # And the gitignore itself
 !.gitignore
